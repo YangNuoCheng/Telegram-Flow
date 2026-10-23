@@ -1,0 +1,41 @@
+.dockerignore
+  s_a9f81e88c2b483::t_092c8ca0977b94 1-7
+.gitignore
+  s_a9f81e88c2b483::t_e3d147055b4142 1-15
+Dockerfile
+  s_a9f81e88c2b483::t_b6b655ba7049cc 1-14
+README.md
+  s_a9f81e88c2b483::t_da61a37e951e42 1-59
+app.py
+  s_a9f81e88c2b483::t_3c21b567051b87 1-1222
+compose.yaml
+  s_a9f81e88c2b483::t_eece18f16dd5a6 1-17
+index.html
+  s_a9f81e88c2b483::t_23e25899e7ce76 1-732
+login.py
+  s_a9f81e88c2b483::t_e84c27366f6337 1-34
+pyproject.toml
+  s_a9f81e88c2b483::t_44cd24ebaba115 1-10
+start.sh
+  s_a9f81e88c2b483::t_b55aba4b7c89a7 1-26
+stop.sh
+  s_a9f81e88c2b483::t_9fce6c54fdcb92 1-4
+uv.lock
+  s_a9f81e88c2b483::t_d9690932f95a3a 1-846
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "55d64d29461255dcc3bebeb46247caa2ce4d9d4c",
+  "prompts": {},
+  "sessions": {
+    "s_a9f81e88c2b483": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16970-4d19-7132-8b2b-af468e126a02",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "dayyang <18801328722@163.com>"
+    }
+  }
+}
