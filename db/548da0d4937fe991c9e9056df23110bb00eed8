@@ -1,0 +1,41 @@
+telegram_flow/server.py
+  s_a9f81e88c2b483::t_2c32cec1432bd0 5,212-213,239
+login.py
+  s_a9f81e88c2b483::t_2c32cec1432bd0 7,25-26,33-34
+.gitattributes
+  s_a9f81e88c2b483::t_6f0f58c7d89eab 1-2
+README.md
+  s_a9f81e88c2b483::t_7b9aebdcbe3663 3-4,7,9-11,13,15,17,19,21-25,29-32,34,40-44,48,50,52,54-56,58,60-61,64,66-67,69-94,96-98,100-113,117,127-129,131
+docs/ARCHITECTURE.md
+  s_a9f81e88c2b483::t_b46245067b98be 109,136
+llms.txt
+  s_a9f81e88c2b483::t_e48a4264125994 5
+start.ps1
+  s_a9f81e88c2b483::t_f13f255636036e 1-25
+start.sh
+  s_a9f81e88c2b483::t_d3da54e669c73a 2,5-13,19-24
+stop.ps1
+  s_a9f81e88c2b483::t_870a715c14499c 1-5
+web/about.html
+  s_a9f81e88c2b483::t_53d7f248f20aa4 34
+web/index.html
+  s_a9f81e88c2b483::t_2fb225741d712f 710
+web/logo.svg
+  s_a9f81e88c2b483::t_d415a50802df1f 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "db548da0d4937fe991c9e9056df23110bb00eed8",
+  "prompts": {},
+  "sessions": {
+    "s_a9f81e88c2b483": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16970-4d19-7132-8b2b-af468e126a02",
+        "model": "anthropic/claude-opus-5-5"
+      },
+      "human_author": "dayyang <18801328722@163.com>"
+    }
+  }
+}
