@@ -1,0 +1,29 @@
+README.md
+  s_a9f81e88c2b483::t_98a49c22348bb0 5-8
+app.py
+  s_a9f81e88c2b483::t_14dd686bdf1f4c 536-537,541,549-554,560-561,565,601,607,612,756-761
+index.html
+  s_a9f81e88c2b483::t_43f0c7632cc83d 63-64,219,286-287,296,305-306,372,374,606,723-752
+tests/test_hold.cjs
+  s_a9f81e88c2b483::t_88493e7f3f0df8 1-28
+tests/test_queue.cjs
+  s_a9f81e88c2b483::t_269ef079a92a89 9-10,31-44
+tests/test_requests.py
+  s_a9f81e88c2b483::t_4347eefcfefd38 57-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "422f61f50fa2f52722f462cea43d1d98bb21e983",
+  "prompts": {},
+  "sessions": {
+    "s_a9f81e88c2b483": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16970-4d19-7132-8b2b-af468e126a02",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "dayyang <18801328722@163.com>"
+    }
+  }
+}
