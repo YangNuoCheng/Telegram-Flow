@@ -1,0 +1,9 @@
+*
+!Dockerfile
+!pyproject.toml
+!uv.lock
+!app.py
+!login.py
+!telegram_flow/
+!web/
+**/__pycache__

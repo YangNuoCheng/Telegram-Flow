@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="616" viewBox="0 0 1200 616" role="img" aria-labelledby="title desc">
+<title id="title">Telegram-Flow 架构</title>
+<desc id="desc">三条路径：选定来源的元数据同步进本地索引，经偏好排序生成浏览器卡片队列；浏览反馈在本机更新偏好权重并参与下一次排序；媒体在播放时按需从 Telegram 读取，经内存缓存转发给浏览器。</desc>
+<defs>
+<marker id="ab" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 8 5 1 9" fill="none" stroke="#1b62d1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="ag" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 8 5 1 9" fill="none" stroke="#2f8375" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="ao" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 8 5 1 9" fill="none" stroke="#c8642f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<style>
+text{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif;fill:#152a46}
+.t{font-size:17px;font-weight:650}.s{font-size:13px;fill:#52677f}.k{font-size:12px;font-weight:600}
+.box{fill:#fff;stroke:#c9d8eb;stroke-width:1.5}
+.b{stroke:#1b62d1}.g{stroke:#2f8375}.o{stroke:#c8642f}
+.flow{fill:none;stroke-width:2.2;stroke-linecap:round}
+.kb{fill:#1b62d1}.kg{fill:#2f8375}.ko{fill:#c8642f}
+.pill{fill:#fbefe8}
+</style>
+</defs>
+<rect width="1200" height="616" rx="22" fill="#eef4fb"/>
+<text x="32" y="54" font-size="22" font-weight="750">Telegram-Flow</text>
+<text x="196" y="54" class="s">来源组合 · 在线转发 · 本地偏好学习</text>
+<rect x="848" y="40" width="10" height="10" rx="3" class="kb"/><text x="864" y="50" class="s">索引与编排</text>
+<rect x="962" y="40" width="10" height="10" rx="3" class="kg"/><text x="978" y="50" class="s">偏好学习</text>
+<rect x="1062" y="40" width="10" height="10" rx="3" class="ko"/><text x="1078" y="50" class="s">在线转发</text>
+
+<rect x="236" y="88" width="676" height="464" rx="18" fill="#e3ecf8" stroke="#c9d8eb" stroke-dasharray="6 6"/>
+<text x="258" y="114" class="s">你的电脑 · 单个 Docker 服务</text>
+
+<rect class="box" x="32" y="128" width="170" height="396" rx="14"/>
+<text x="52" y="162" class="t">Telegram</text>
+<text x="52" y="186" class="s">账号可访问的</text>
+<text x="52" y="205" class="s">频道与群组</text>
+<rect x="52" y="226" width="130" height="30" rx="8" fill="#eef4fb"/><text x="66" y="246" class="s">来源 A · 图片</text>
+<rect x="52" y="264" width="130" height="30" rx="8" fill="#eef4fb"/><text x="66" y="284" class="s">来源 B · 视频</text>
+<rect x="52" y="302" width="130" height="30" rx="8" fill="#eef4fb"/><text x="66" y="322" class="s">来源 C · 相册</text>
+<text x="52" y="500" class="s">Telethon · MTProto</text>
+
+<rect class="box" x="262" y="128" width="280" height="104" rx="12"/><rect x="262" y="140" width="4" height="80" rx="2" class="kb"/>
+<text x="284" y="161" class="t">同步与索引</text>
+<text x="284" y="187" class="s">增量同步选定来源 · 每 15 分钟</text>
+<text x="284" y="209" class="s">过滤推广与屏蔽词 · 按相册分组</text>
+
+<rect class="box" x="606" y="128" width="280" height="104" rx="12"/><rect x="606" y="140" width="4" height="80" rx="2" class="kb"/>
+<text x="628" y="161" class="t">偏好排序与编排</text>
+<text x="628" y="187" class="s">偏好权重 + 新鲜度 + 热度</text>
+<text x="628" y="209" class="s">去掉已读 · 分散来源与图视频</text>
+
+<rect class="box" x="262" y="272" width="280" height="96" rx="12"/>
+<text x="284" y="304" class="t">本地数据 · SQLite</text>
+<text x="284" y="329" class="s">来源设置 · 帖子索引</text>
+<text x="284" y="350" class="s">浏览记录 · 偏好权重</text>
+
+<rect class="box" x="606" y="272" width="280" height="96" rx="12"/><rect x="606" y="284" width="4" height="72" rx="2" class="kg"/>
+<text x="628" y="304" class="t">本地偏好学习</text>
+<text x="628" y="329" class="s">特征与特征组合 · 在线更新</text>
+<text x="628" y="350" class="s">只用 CPU ·「口味」面板可查看</text>
+
+<rect class="box" x="262" y="408" width="624" height="116" rx="12"/><rect x="262" y="420" width="4" height="92" rx="2" class="ko"/>
+<text x="284" y="440" class="t">媒体在线转发</text>
+<rect x="284" y="456" width="112" height="30" rx="15" class="pill"/><text x="340" y="476" text-anchor="middle" class="s">按需读取</text>
+<path d="M404 471H428" class="flow o" marker-end="url(#ao)"/>
+<rect x="436" y="456" width="112" height="30" rx="15" class="pill"/><text x="492" y="476" text-anchor="middle" class="s">内存缓存</text>
+<path d="M556 471H580" class="flow o" marker-end="url(#ao)"/>
+<rect x="588" y="456" width="148" height="30" rx="15" class="pill"/><text x="662" y="476" text-anchor="middle" class="s">HTTP Range 转发</text>
+<text x="284" y="510" class="s">图片 ≤ 200 MiB · 视频分块 ≤ 600 MiB · 不归档完整文件</text>
+
+<rect class="box" x="948" y="128" width="220" height="396" rx="14"/>
+<text x="968" y="162" class="t">浏览器内容流</text>
+<text x="968" y="186" class="s">电脑 · 手机 · 平板</text>
+<path d="M968 204H1148" stroke="#dde6f2"/>
+<text x="968" y="232" class="s">最多 200 条待刷索引</text>
+<text x="968" y="256" class="s">前方 4 条媒体已缓冲</text>
+<text x="968" y="314" class="s">喜欢 · 隐藏 · 停留</text>
+<text x="968" y="338" class="s">搜索 · 按标签和来源浏览</text>
+<text x="968" y="460" class="s">长按 2× · 拖动定位</text>
+<text x="968" y="484" class="s">长视频从中段开始</text>
+
+<path d="M402 272V232M542 320H606" fill="none" stroke="#9fb3cc" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+<path d="M202 180H254" class="flow b" marker-end="url(#ab)"/><text x="228" y="162" text-anchor="middle" class="k kb">元数据</text>
+<path d="M542 180H598" class="flow b" marker-end="url(#ab)"/>
+<path d="M886 180H940" class="flow b" marker-end="url(#ab)"/><text x="914" y="162" text-anchor="middle" class="k kb">卡片</text>
+
+<path d="M948 320H894" class="flow g" marker-end="url(#ag)"/><text x="920" y="302" text-anchor="middle" class="k kg">反馈</text>
+<path d="M746 272V240" class="flow g" marker-end="url(#ag)"/><text x="760" y="261" class="k kg">权重</text>
+
+<path d="M202 471H254" class="flow o" marker-end="url(#ao)"/><text x="228" y="453" text-anchor="middle" class="k ko">媒体</text>
+<path d="M886 471H940" class="flow o" marker-end="url(#ao)"/><text x="914" y="453" text-anchor="middle" class="k ko">媒体流</text>
+
+<text x="32" y="590" class="s">媒体只在播放时读取，服务重启后内存缓存清空；实际播放受 Telegram 可用性、网络与请求限制影响。</text>
+</svg>

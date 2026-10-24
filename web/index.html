@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Telegram-Flow</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff4d6d'/%3E%3Cstop offset='1' stop-color='%23ff9a3c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M12 9.5v13l10.5-6.5z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root { --bar:52px; --line:#2a2f3a; --dim:#9aa3b2; --accent:#ff4d6d; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; background:#000; color:#eef0f4; font:14px/1.5 -apple-system,"PingFang SC",sans-serif; overflow:hidden; }
+  header { height:var(--bar); display:flex; align-items:center; gap:8px; padding:0 12px; background:#0d0f13; border-bottom:1px solid var(--line); }
+  header b { margin-right:6px; }
+  .logo { display:flex; align-items:center; gap:8px; margin-right:6px; cursor:pointer; user-select:none; flex:none; }
+  .logo svg { width:28px; height:28px; display:block; }
+  .logo b { font-size:16px; letter-spacing:.3px; margin:0; }
+  .logo b i { font-style:normal; color:var(--accent); }
+  button { font:inherit; color:inherit; background:#171a21; border:1px solid var(--line); border-radius:999px; padding:5px 12px; cursor:pointer; }
+  button.on { background:var(--accent); border-color:var(--accent); }
+  .grow { flex:1; }
+  #crumb { display:flex; gap:6px; align-items:center; overflow:hidden; white-space:nowrap; }
+  #crumb span { color:var(--dim); }
+  #stat { color:var(--dim); font-size:12px; }
+  header button, header b { white-space:nowrap; flex:none; }
+  #stat { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:0 1 auto; }
+  #crumb { min-width:0; flex:0 1 auto; }
+  #feed { height:calc(100% - var(--bar)); overflow-y:scroll; scroll-snap-type:y mandatory; scrollbar-width:none; }
+  #feedNotice { position:fixed; bottom:calc(12px + env(safe-area-inset-bottom, 0px)); left:50%; transform:translateX(-50%); z-index:8; background:#1a1d24e8; border:1px solid #444; border-radius:12px; padding:8px 12px; font-size:12px; max-width:90vw; text-align:center; pointer-events:none; }
+  #feed::-webkit-scrollbar { display:none; }
+  .card { height:100%; scroll-snap-align:start; scroll-snap-stop:always; position:relative; display:flex; align-items:center; justify-content:center; background:#000; overflow:hidden; }
+  .stage { position:absolute; inset:0; display:flex; transition:transform .25s ease; }
+  .slide { flex:0 0 100%; height:100%; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+  /* 拉满：一律放大到屏幕边界；比例和屏幕接近的直接铺满裁边，差得多的用同图模糊做底，不留黑边 */
+  .slide img, .slide video { position:relative; z-index:1; width:100%; height:100%; object-fit:contain; }
+  .slide.cover img, .slide.cover video { object-fit:cover; }
+  .slide.bg::before { content:""; position:absolute; inset:-40px; background:var(--bg) center/cover; filter:blur(30px) brightness(.45); }
+  .stage { z-index:0; }
+  .info, .rail, .nav, .dots, .seek, .tlabel { z-index:2; }
+  .nav { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,.45); border:0; font-size:22px; width:40px; height:40px; padding:0; }
+  .nav.l { left:12px; } .nav.r { right:84px; }
+  .dots { position:absolute; top:12px; left:50%; transform:translateX(-50%); font-size:12px; background:rgba(0,0,0,.5); padding:2px 10px; border-radius:999px; }
+  .info { position:absolute; left:16px; right:96px; bottom:28px; text-shadow:0 1px 3px #000; max-width:760px; }
+  .seek { position:absolute; left:0; right:0; bottom:0; height:22px; z-index:3; cursor:pointer; display:flex; align-items:flex-end; touch-action:none; }
+  .seek[hidden] { display:none; }
+  .seek .track { position:relative; width:100%; height:5px; background:rgba(255,255,255,.18); transition:height .12s; }
+  .seek:hover .track, .seek.drag .track { height:10px; }
+  .seek .buf { position:absolute; left:0; top:0; bottom:0; background:rgba(255,255,255,.3); }
+  .seek .fill { position:absolute; left:0; top:0; bottom:0; background:var(--accent); }
+  .seek .tip { position:absolute; bottom:16px; transform:translateX(-50%); font-size:12px; background:rgba(0,0,0,.75); padding:1px 7px; border-radius:6px; display:none; pointer-events:none; }
+  .seek:hover .tip, .seek.drag .tip { display:block; }
+  .tlabel { position:absolute; top:12px; right:16px; font-size:12px; background:rgba(0,0,0,.5); padding:2px 8px; border-radius:999px; font-variant-numeric:tabular-nums; }
+  .tlabel:empty { display:none; }
+  .info .ch { font-weight:600; background:rgba(0,0,0,.35); }
+  .info .text { margin:6px 0; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-wrap; cursor:pointer; }
+  .info .text.open { -webkit-line-clamp:unset; max-height:40vh; overflow:auto; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chips button { padding:2px 9px; font-size:12px; background:rgba(0,0,0,.4); }
+  .why { color:#ffd166; font-size:12px; margin-top:6px; }
+  .rail { position:absolute; right:14px; bottom:24px; display:flex; flex-direction:column; gap:14px; }
+  .rail button { width:52px; height:52px; padding:0; font-size:20px; background:rgba(20,22,28,.7); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .rail small { font-size:10px; color:var(--dim); line-height:1; }
+  .rail .liked { background:var(--accent); }
+  .speedHint { position:absolute; top:18px; left:50%; transform:translateX(-50%); z-index:6; background:#111c; border-radius:20px; padding:8px 16px; pointer-events:none; }
+  .stage video { -webkit-touch-callout:none; user-select:none; }
+  .heart { position:absolute; font-size:96px; pointer-events:none; animation:pop .7s ease forwards; }
+  @keyframes pop { from { opacity:1; transform:scale(.6); } to { opacity:0; transform:scale(1.4); } }
+  .msg { height:100%; display:flex; flex-direction:column; gap:12px; align-items:center; justify-content:center; color:var(--dim); text-align:center; padding:24px; }
+  .msg code { background:#171a21; padding:2px 6px; border-radius:6px; color:#eef0f4; }
+  dialog { background:#12151b; color:inherit; border:1px solid var(--line); border-radius:14px; width:min(560px,92vw); max-height:80vh; padding:16px; }
+  dialog::backdrop { background:rgba(0,0,0,.6); }
+  .list { max-height:52vh; overflow:auto; margin:10px 0; }
+  .list label { display:flex; gap:8px; align-items:center; padding:6px 4px; border-bottom:1px solid #1d2129; cursor:pointer; }
+  .list small { color:var(--dim); margin-left:auto; }
+  input[type=search] { width:100%; font:inherit; color:inherit; background:#0d0f13; border:1px solid var(--line); border-radius:8px; padding:6px 10px; }
+  .row { display:flex; gap:8px; justify-content:flex-end; }
+  .tw { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 14px; }
+  #q { width:min(280px,30vw); font:inherit; color:inherit; background:#171a21; border:1px solid var(--line); border-radius:999px; padding:5px 12px; }
+  .add { display:flex; gap:6px; margin-top:8px; }
+  .add textarea { flex:1; font:inherit; color:inherit; background:#0d0f13; border:1px solid var(--line); border-radius:8px; padding:6px 10px; height:38px; resize:vertical; }
+  #peekOut .p { display:flex; gap:8px; align-items:center; padding:6px 4px; border-bottom:1px solid #1d2129; }
+  #peekOut .p small { color:var(--dim); margin-left:auto; white-space:nowrap; }
+  #peekOut .err { color:#ff8fa3; }
+  #lanBody svg { width:240px; height:240px; display:block; margin:12px auto; border-radius:8px; }
+  #lanBody code { word-break:break-all; font-size:12px; }
+  /* 竖屏：导航与搜索分成两行，给画面留出完整宽度。 */
+  @media (max-width:760px), (max-width:1100px) and (orientation:portrait) {
+    :root { --bar:calc(98px + env(safe-area-inset-top, 0px)); }
+    body { height:100dvh; }
+    header { height:var(--bar); display:grid; grid-template-columns:28px minmax(0,1fr) auto auto auto;
+      grid-template-rows:40px 42px; gap:4px 6px;
+      padding:calc(6px + env(safe-area-inset-top, 0px)) max(10px, env(safe-area-inset-right, 0px)) 6px max(10px, env(safe-area-inset-left, 0px)); }
+    .logo { grid-column:1; grid-row:1; margin:0; }
+    .logo b, #stat, #lanBtn, header > .grow { display:none; }
+    header [data-mode] { grid-row:1; padding:7px 8px; font-size:13px; }
+    header [data-mode=foryou] { grid-column:2; }
+    header [data-mode=new] { grid-column:3; }
+    header [data-mode=liked] { grid-column:4; }
+    #tasteBtn { grid-column:5; grid-row:1; padding:7px 8px; font-size:13px; }
+    #q { grid-column:1 / 5; grid-row:2; width:100%; min-width:0; font-size:16px; height:36px; }
+    #chanBtn { grid-column:5; grid-row:2; padding:7px 8px; font-size:13px; }
+    #crumb { position:absolute; top:calc(var(--bar) + 10px); left:10px; right:95px; z-index:5; pointer-events:none; }
+    #crumb button { pointer-events:auto; background:rgba(0,0,0,.65); }
+    #crumb span { display:none; }
+    #feed { overscroll-behavior-y:contain; touch-action:pan-y pinch-zoom; }
+    .stage { touch-action:pan-y pinch-zoom; -webkit-user-select:none; user-select:none; }
+    .slide img { -webkit-user-drag:none; }
+    .info { left:max(12px, env(safe-area-inset-left, 0px)); right:76px;
+      bottom:calc(35px + env(safe-area-inset-bottom, 0px)); font-size:13px; max-height:33%; }
+    .info .text { -webkit-line-clamp:2; margin:5px 0; }
+    .info .text.open { max-height:22dvh; }
+    .info .ch { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+    .info > .chips { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; }
+    .info > .chips button { flex:none; }
+    .info > .chips .ch { flex:0 1 auto; }
+    .why { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .rail { right:max(10px, env(safe-area-inset-right, 0px)); bottom:calc(38px + env(safe-area-inset-bottom, 0px)); gap:10px; }
+    .rail button { width:46px; height:46px; font-size:19px; }
+    .seek { bottom:env(safe-area-inset-bottom, 0px); height:30px; }
+    .tlabel { top:12px; right:10px; font-size:11px; }
+    .nav { display:none; }
+    dialog { max-height:80dvh; overflow:auto; }
+    .card::after { content:""; position:absolute; inset:55% 0 0; pointer-events:none; z-index:1;
+      background:linear-gradient(transparent,rgba(0,0,0,.55)); }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" id="logo" title="回到为你推荐">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff4d6d"/><stop offset="1" stop-color="#ff9a3c"/></linearGradient></defs>
+      <rect width="32" height="32" rx="9" fill="url(#lg)"/><path d="M12 9.5v13l10.5-6.5z" fill="#fff"/></svg>
+    <b>Telegram<i>-</i>Flow</b>
+  </div>
+  <button data-mode="foryou" class="on">为你推荐</button>
+  <button data-mode="new">最新</button>
+  <button data-mode="liked">喜欢过</button>
+  <div id="crumb"></div>
+  <div class="grow"></div>
+  <input type="search" id="q" placeholder="搜索 正文 / 标签 / 频道（按 / 聚焦）">
+  <span id="stat"></span>
+  <button id="tasteBtn">口味</button>
+  <button id="chanBtn">频道</button>
+  <button id="lanBtn">手机</button>
+</header>
+<div id="feed"></div>
+<div id="feedNotice" role="status" aria-live="polite" hidden></div>
+
+<dialog id="chanDlg">
+  <b>选择要刷的频道和群组</b>
+  <div style="color:var(--dim);font-size:12px;margin-top:4px">只列出你账号里已经加入的频道和群组。</div>
+  <div style="margin-top:10px"><input type="search" id="chanFilter" placeholder="筛选名称"></div>
+  <div class="list" id="chanList">读取中…</div>
+  <b style="font-size:13px">添加频道</b>
+  <div style="color:var(--dim);font-size:12px">贴 @用户名、t.me 链接或邀请链接，可一次贴多个（空格或换行分隔），先看订阅人数再决定。</div>
+  <div class="add"><textarea id="addRef" placeholder="@channel1  https://t.me/channel2"></textarea><button id="peekBtn">查看</button></div>
+  <div id="peekOut"></div>
+  <div class="row"><button id="chanCancel">取消</button><button class="on" id="chanSave">保存并同步</button></div>
+</dialog>
+<dialog id="lanDlg">
+  <b>用手机 / 平板看</b>
+  <div id="lanBody" style="color:var(--dim);font-size:13px;margin-top:6px">读取中…</div>
+  <div class="row"><button id="lanClose">关闭</button></div>
+</dialog>
+<dialog id="tasteDlg">
+  <b>系统学到的口味</b>
+  <div style="color:var(--dim);font-size:12px">点一项，就只刷这一类。</div>
+  <div id="tasteBody"></div>
+  <div class="row"><button id="tasteClose">关闭</button></div>
+</dialog>
+
+<script>
+// Cookie 已随页面响应保存，移除地址中的访问口令，避免转发或外链携带。
+if (new URLSearchParams(location.search).has("k")) {
+  const clean = new URL(location.href); clean.searchParams.delete("k");
+  history.replaceState(null, "", clean.pathname + clean.search + clean.hash);
+}
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const feedEl = $("#feed");
+const state = { mode:"foryou", feature:null, stack:[], shown:new Set(), loading:false, done:false, muted:true, liked:new Set(), gen:0 };
+const viewed = new Set(); // 已展示记录跨标签保留，持久历史仍由服务端 event 表保存
+let displayedMode = "foryou", displayedFeature = null;
+const mayShow = (key, mode = state.mode) => mode === "liked" || !viewed.has(key);
+const post = (url, body) => fetch(url, { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(body || {}) });
+const send = (key, kind, ms) => post("/api/event", { key, kind, ms });
+const label = (f) => f.startsWith("tag:") ? "#" + f.slice(4) : f.startsWith("at:") ? "@" + f.slice(3) : f.startsWith("ch:") ? "频道" : f.split(":").slice(1).join(":");
+
+async function status() {
+  const s = await fetch("/api/status", {signal:AbortSignal.timeout(5000)}).then((r) => r.json());
+  $("#stat").textContent = s.ready ? (s.syncing ? "同步中：" + s.syncing + " · " : "") + s.cards + " 条 · 已学 " + s.signals + " 个信号" : "";
+  if (s.retry_after > 0) state.retryUntil = Date.now() + s.retry_after * 1000;
+  return s;
+}
+setInterval(() => {
+  const seconds = Math.max(0, Math.ceil(((state.retryUntil || 0) - Date.now()) / 1000));
+  const notice = $("#feedNotice"); notice.hidden = !seconds;
+  notice.textContent = seconds ? "请求频率受限，" + seconds + " 秒后自动继续" : "";
+}, 500);
+async function checkRateLimit() {
+  const s = await status().catch(() => ({}));
+  if (s.retry_after > 0) throw Object.assign(new Error("rate limited"), { retry:true });
+}
+
+async function boot() {
+  const s = await status();
+  if (!s.configured || !s.ready) {
+    feedEl.innerHTML = '<div class="msg"><b>还没登录 Telegram</b><div>在项目目录运行：<br><code>docker compose run --rm --no-deps tg-feed python login.py</code></div>' +
+      '<div>按提示填 api_id、api_hash（在 my.telegram.org 创建），再输入 Telegram 发来的验证码。<br>登录后重新运行启动脚本：<code>./start.sh</code> 或 <code>.\start.ps1</code></div></div>';
+    return;
+  }
+  if (!s.channels) { openChannels(); feedEl.innerHTML = '<div class="msg">先在「频道」里勾选要刷的频道。</div>'; return; }
+  reset();
+}
+setInterval(() => status().catch(() => {}), 8000);
+
+function reset() {
+  clearTimeout(refillTimer); refillTimer = null;
+  stashAhead();
+  state.shown.clear(); state.done = false; state.gen++; raw.length = 0; preparing = 0; insertion = Promise.resolve(); stopHold(); active = null;
+  feedEl.innerHTML = '<div class="msg" id="warming">正在预载…</div>'; feedEl.scrollTop = 0;
+  renderCrumb();
+  const ready = state.feature ? [] : stash[state.mode].splice(0).filter((el) => mayShow(el.dataset.key));
+  displayedMode = state.mode; displayedFeature = state.feature;
+  feedEl.dataset.reused = ready.length;
+  for (const el of ready) { state.shown.add(el.dataset.key); $("#warming")?.remove(); feedEl.append(el); near.observe(el); seen.observe(el); }
+  fill();
+}
+
+// 标签秒切：离开一个标签时，把已经预载好、还没看的卡片存起来，切回来直接接上；
+// 空闲时再给另外几个标签各预载两张，第一次切过去也不用等
+const stash = { foryou:[], new:[], liked:[] };
+function stashAhead() {
+  if (displayedFeature || !stash[displayedMode]) return;
+  const cards = [...feedEl.querySelectorAll(".card[data-key]")];
+  const i = active ? cards.indexOf(active) : -1;
+  const keep = cards.slice(i + 1, i + 1 + AHEAD).filter((el) => mayShow(el.dataset.key, displayedMode));
+  for (const el of keep) { near.unobserve(el); seen.unobserve(el); el.remove(); el.querySelectorAll("video").forEach((v) => v.pause()); }
+  const unique = new Map(keep.concat(stash[displayedMode]).filter((el) => mayShow(el.dataset.key, displayedMode)).map((el) => [el.dataset.key, el]));
+  stash[displayedMode] = [...unique.values()].slice(0, AHEAD);
+}
+let prewarming = false;
+async function prewarm() {
+  if (prewarming || document.hidden || Date.now() < (state.retryUntil || 0) || ahead() < AHEAD - 1) return;
+  const mode = Object.keys(stash).find((m) => m !== state.mode && stash[m].length < 2);
+  if (!mode) return;
+  prewarming = true;
+  try {
+    const have = new Set([...state.shown, ...stash[mode].map((el) => el.dataset.key)]);
+    const query = { mode, exclude:[...have] };
+    const cards = await fetch("/api/feed", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(query), signal:AbortSignal.timeout(12000) }).then((r) => r.ok ? r.json() : []).catch(() => []);
+    for (const c of cards.slice(0, 2 - stash[mode].length)) { const el = await prepare(c); if (el && mayShow(el.dataset.key, mode)) stash[mode].push(el); }
+  } finally { prewarming = false; feedEl.dataset.stash = Object.entries(stash).map(([k, v]) => k + v.length).join(" "); }
+}
+setInterval(() => { prewarm().catch(() => {}); }, 3000);
+// 网络恢复、回到前台或快速划到队尾，都重新检查预载队列。
+setInterval(() => {
+  if (!document.hidden && ahead() < AHEAD && preparing === 0 && !state.loading) fill().catch(() => retryFill());
+}, 2000);
+window.addEventListener("online", () => { state.done = false; fill(); });
+feedEl.addEventListener("scroll", () => {
+  if (feedEl.scrollHeight - feedEl.scrollTop - feedEl.clientHeight < feedEl.clientHeight * 2) fill();
+}, { passive:true });
+
+function renderCrumb() {
+  const c = $("#crumb"); c.innerHTML = "";
+  if (!state.feature) return;
+  const back = document.createElement("button"); back.textContent = "← 返回"; back.onclick = goBack;
+  const cur = document.createElement("span"); cur.textContent = "只看 " + (state.featureLabel || label(state.feature));
+  c.append(back, cur);
+}
+
+function drill(feature, text) {
+  state.stack.push({ feature:state.feature, featureLabel:state.featureLabel });
+  state.feature = feature; state.featureLabel = text; state.mode = state.mode === "liked" ? "foryou" : state.mode;
+  syncModeButtons(); reset();
+}
+function goBack() {
+  const prev = state.stack.pop() || { feature:null };
+  state.feature = prev.feature; state.featureLabel = prev.featureLabel; reset();
+}
+function syncModeButtons() { for (const b of document.querySelectorAll("[data-mode]")) b.classList.toggle("on", b.dataset.mode === state.mode); }
+for (const b of document.querySelectorAll("[data-mode]")) b.onclick = () => { state.mode = b.dataset.mode; state.feature = null; state.stack = []; syncModeButtons(); reset(); };
+
+// 预载流水线：从服务端取一批卡片放进 raw，后台把每张卡的原图解码好 / 视频缓冲到能播（长视频已跳到中间），
+// 就绪了才插到刷的队列里，当前卡后面始终保持 AHEAD 张现成的，刷到哪张都不用现等。
+const BUFFER = 200, AHEAD = 4, PREP = 3, READY_TIMEOUT = 15000;
+const raw = []; let preparing = 0, insertion = Promise.resolve();
+function ahead() {
+  const cards = [...feedEl.querySelectorAll(".card[data-key]")];
+  const index = active ? cards.indexOf(active) : Math.max(0, Math.round(feedEl.scrollTop / Math.max(1, feedEl.clientHeight)));
+  return Math.max(0, cards.length - 1 - index);
+}
+async function fill() {
+  if (Date.now() < (state.retryUntil || 0)) { retryFill(); return; }
+  const gen = state.gen;
+  if (raw.length < BUFFER / 2 && !state.done) load();
+  while (gen === state.gen && preparing < PREP && ahead() + preparing < AHEAD + 1) {
+    if (!raw.length) {
+      await load();
+      if (gen !== state.gen) return;
+      if (!raw.length) { if (state.done && !preparing) showEnd(); else retryFill(); return; }
+      continue;
+    }
+    const c = raw.shift(); if (!mayShow(c.key)) continue; preparing++;
+    const ready = prepare(c).catch((e) => { if (e.retry && gen === state.gen) raw.unshift(c); return null; });
+    insertion = insertion.then(() => ready).then((el) => {
+      if (gen !== state.gen) return;
+      preparing--;
+      if (el && mayShow(el.dataset.key)) { $("#warming")?.remove(); feedEl.insertBefore(el, $(".card.end", feedEl)); near.observe(el); seen.observe(el); }
+      fill();
+    });
+  }
+}
+async function prepare(c) {
+  const el = renderCard(c);
+  try { await openComments(el); } catch (e) { if (e.retry) throw e; }
+  // 漫画只有封面：评论区不到 3 页、帖子本身不到 6 张、正文/评论/紧跟的帖子里也没有全本链接 → 不推
+  if (c.comic && (el.pageCount || 0) < 3 && c.media.length < 6 && !(el.links || []).length) return null;
+  const ok = await mediaReady(el);
+  if (ok !== true) {
+    for (const v of el.querySelectorAll("video")) { v.pause(); v.removeAttribute("src"); v.load(); }
+    await checkRateLimit();
+    return null;
+  }
+  for (const img of el.querySelectorAll("img[data-src]")) if (!img.src) img.src = img.dataset.src;  // 多图帖其余几张跟着拉
+  loadPagesNear(el);
+  return el;
+}
+function mediaReady(el) {
+  const slide = el.querySelectorAll(".slide")[el.idx || 0];
+  const v = slide?.querySelector("video"), img = slide?.querySelector("img");
+  const within = (p) => Promise.race([p, new Promise((r) => setTimeout(() => r(false), READY_TIMEOUT))]);
+  if (img) { if (!img.src) img.src = img.dataset.src || img.dataset.pg; return within(img.decode().then(() => true, () => false)); }
+  if (!v) return Promise.resolve(true);
+  const m = el.data.media[el.idx || 0];
+  if (m) post("/api/prefetch/" + m.chat + "/" + m.msg + "?at=" + ((m.duration || 0) >= LONG_VIDEO ? START_AT : 0));
+  return within(new Promise((res) => {
+    v.addEventListener("error", () => res(false), { once:true });
+    const chk = () => { if (v.started && v.readyState >= 3) res(true); };
+    for (const ev of ["canplay", "seeked", "loadeddata"]) v.addEventListener(ev, chk);
+    v.preload = "auto"; if (!v.src) v.src = v.dataset.src;
+  }));
+}
+let refillTimer = null, moreAt = 0;
+function retryFill() {
+  if (refillTimer) return;
+  const gen = state.gen;
+  refillTimer = setTimeout(() => {
+    refillTimer = null;
+    if (gen === state.gen) { state.done = false; fill(); }
+  }, 5000);
+}
+function showEnd() {
+  // 保留正在看的卡片，后台补充历史帖子，不再插入「刷完了」终点。
+  const now = Date.now();
+  if (state.mode !== "liked" && now - moreAt > 60000) {
+    moreAt = now;
+    post("/api/more").catch(() => {});
+  }
+  const msg = $("#warming");
+  if (msg) msg.textContent = "正在补充内容…";
+  retryFill();
+}
+
+function load() {
+  const gen = state.gen;
+  if (state.loadGen === gen && state.loadPromise) return state.loadPromise;
+  if (state.done) return Promise.resolve();
+  state.loadGen = gen;
+  const run = async () => {
+    state.loading = true;
+    const q = { mode:state.mode, exclude:[...state.shown], size:Math.max(1, BUFFER - raw.length - preparing - ahead()) };
+    q.recent = [...[...feedEl.querySelectorAll(".card[data-key]")].map((c) => c.dataset.key), ...raw.map((c) => c.key)].slice(-20).map((k) => k.split(":")[0]);
+    q.recentMedia = [...[...feedEl.querySelectorAll(".card[data-key]")].map((el) => el.data), ...raw].slice(-20).map((c) => c.media.some((m) => m.kind !== "photo") ? "video" : "photo");
+    if (state.feature) q.feature = state.feature;
+    try {
+      const r = await fetch("/api/feed", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(q), signal:AbortSignal.timeout(12000) });
+      if (!r.ok) throw new Error("feed " + r.status);
+      const cards = await r.json();
+      if (gen !== state.gen) return;
+      if (!cards.length) { state.done = true; return; }
+      let added = 0;
+      for (const c of cards) {
+        if (!state.shown.has(c.key) && mayShow(c.key)) { state.shown.add(c.key); raw.push(c); added++; }
+      }
+      if (!added) state.done = true;
+    } catch {
+      if (gen === state.gen) retryFill();
+    } finally {
+      if (gen === state.gen) { state.loading = false; state.loadPromise = null; }
+    }
+  };
+  state.loadPromise = run();
+  return state.loadPromise;
+}
+
+const SCREEN_AR = () => (feedEl.clientWidth || innerWidth) / (feedEl.clientHeight || innerHeight);
+function slideClass(m) {
+  if (!m.width || !m.height) return "";
+  return Math.abs(Math.log(m.width / m.height / SCREEN_AR())) < 0.22 ? " cover" : "";
+}
+function mediaHTML(m) {
+  const src = "/media/" + (m.kind === "photo" ? "image" : "video") + "/" + m.chat + "/" + m.msg;
+  if (m.kind === "photo") return '<img decoding="async" data-src="' + src + '" alt="">';
+  return '<video playsinline loop muted preload="none" data-src="' + src + '"></video>';
+}
+function slideHTML(m) {
+  const cls = slideClass(m), src = m.url || "/media/image/" + m.chat + "/" + m.msg;
+  const bg = m.kind === "photo" && !cls ? ' bg" style="--bg:url(' + src + ')' : "";
+  return '<div class="slide' + cls + bg + '">';
+}
+
+function renderCard(c) {
+  const el = document.createElement("section"); el.className = "card"; el.dataset.key = c.key; el.idx = 0; el.data = c;
+  const why = c.explore ? "随机探索：换换口味" : c.why.length ? "因为你喜欢 " + c.why.join("、") : "";
+  el.innerHTML =
+    '<div class="stage">' + c.media.map((m) => slideHTML(m) + mediaHTML(m) + '</div>').join("") + '</div>' +
+    (c.media.length > 1 ? '<button class="nav l">‹</button><button class="nav r">›</button><div class="dots">1 / ' + c.media.length + '</div>' : "") +
+    '<div class="info"><div class="chips"><button class="ch">' + esc(c.channel.title) + '</button></div>' +
+    (c.text ? '<div class="text">' + esc(c.text) + '</div>' : "") +
+    '<div class="chips">' + c.tags.map((t) => '<button data-f="' + esc(t) + '">' + esc(label(t)) + '</button>').join("") + '</div>' +
+    (why ? '<div class="why">' + esc(why) + '</div>' : "") + '</div>' +
+    '<div class="rail"><button class="like">♥<small>喜欢</small></button><button class="hide">✕<small>没兴趣</small></button>' +
+    '<button class="snd">' + (state.muted ? "🔇" : "🔊") + '<small>声音</small></button>' +
+    (c.link ? '<button class="orig">↗<small>原帖</small></button>' : "") + '</div>';
+  if (c.media.some((m) => m.kind !== "photo")) {
+    el.insertAdjacentHTML("beforeend", '<div class="tlabel"></div><div class="seek" hidden><div class="track"><div class="buf"></div><div class="fill"></div></div><div class="tip"></div></div>');
+    initSeek(el);
+  }
+  $(".ch", el).onclick = () => drill("ch:" + c.channel.id, c.channel.title);
+  for (const b of el.querySelectorAll("[data-f]")) b.onclick = () => drill(b.dataset.f);
+  const text = $(".text", el); if (text) text.onclick = () => { if (!text.classList.toggle("open")) return; send(c.key, "open"); };
+  $(".like", el).onclick = () => toggleLike(el);
+  $(".hide", el).onclick = () => { send(c.key, "hide"); next(el); el.style.opacity = .25; };
+  $(".snd", el).onclick = () => setMuted(!state.muted, el);
+  if (c.link) $(".orig", el).onclick = () => { send(c.key, "open"); window.open(c.link, "_blank", "noreferrer"); };
+  if (c.media.length > 1) { $(".nav.l", el).onclick = () => slide(el, -1); $(".nav.r", el).onclick = () => slide(el, 1); }
+  $(".stage", el).ondblclick = (e) => {
+    if (performance.now() - lastTouchEnd < 700) return;
+    likeAt(el, e.clientX, e.clientY);
+  };
+  return el;
+}
+
+function toggleLike(el) {
+  const k = el.dataset.key, on = !state.liked.has(k);
+  on ? state.liked.add(k) : state.liked.delete(k);
+  $(".like", el).classList.toggle("liked", on); send(k, on ? "like" : "unlike");
+}
+function slide(el, d) {
+  const n = el.data.media.length; el.idx = (el.idx + d + n) % n;
+  $(".stage", el).style.transform = "translateX(" + (-100 * el.idx) + "%)";
+  $(".dots", el).textContent = (el.idx + 1) + " / " + n;
+  loadPagesNear(el);
+  playActive(el);
+  paintSeek(el);
+}
+
+// 评论区：漫画整本在评论区，视频也常在评论区。激活时取出来：
+// 有视频就把视频排最前（不要封面）；漫画把评论区图片当页，随机落在中间某页；只预载当前页前后几页
+function loadPagesNear(el) {
+  el.querySelectorAll("img.pg").forEach((img, i) => { if (!img.src && i >= el.idx - 1 && i <= el.idx + 3) img.src = img.dataset.pg; });
+}
+async function openComments(el) {
+  const c = el.data;
+  if (el.commentsLoaded || !c || !(c.comic || c.replies > 0)) return; el.commentsLoaded = true;
+  const m = c.media[0];
+  const got = await fetch("/api/pages/" + m.chat + "/" + m.msg, { signal:AbortSignal.timeout(12000) }).then(async (r) => {
+    if (r.status === 429) { el.commentsLoaded = false; await checkRateLimit(); }
+    return r.ok ? r.json() : {};
+  }).catch((e) => { if (e.retry) throw e; return {}; });
+  const pages = got.pages || [];
+  el.links = got.links || [];
+  const vids = pages.filter((p) => p.kind !== "photo"), pics = pages.filter((p) => p.kind === "photo");
+  el.pageCount = pics.length;
+  if (el.links.length && pics.length < 3 && !$(".full", el)) {
+    $(".rail", el).insertAdjacentHTML("beforeend", '<button class="full">📖<small>全本</small></button>');
+    $(".full", el).onclick = () => { send(c.key, "open"); window.open(el.links[0], "_blank", "noreferrer"); };
+  }
+  const own = c.media.filter((x) => x.kind !== "photo");
+  let media;
+  if (c.comic && pics.length >= 3) media = [...own, ...vids, ...pics];
+  else if (vids.length) media = [...own, ...vids];          // 原帖只有封面图时，封面不要
+  else return;
+  c.media = media;
+  const startPage = c.comic && pics.length >= 3 ? media.length - pics.length + Math.floor(pics.length * (0.35 + Math.random() * 0.3)) : 0;
+  $(".stage", el).innerHTML = media.map((p) => slideHTML(p) + (p.kind === "photo"
+    ? '<img class="pg" alt="" decoding="async" referrerpolicy="no-referrer" data-pg="' + (p.url || "/media/image/" + p.chat + "/" + p.msg) + '">'
+    : '<video playsinline loop preload="metadata" ' + (state.muted ? "muted " : "") + 'data-src="/media/video/' + p.chat + '/' + p.msg + '"></video>') + '</div>').join("");
+  el.querySelectorAll(".nav, .dots").forEach((x) => x.remove());
+  if (media.length > 1) {
+    el.insertAdjacentHTML("beforeend", '<button class="nav l">‹</button><button class="nav r">›</button><div class="dots"></div>');
+    $(".nav.l", el).onclick = () => slide(el, -1); $(".nav.r", el).onclick = () => slide(el, 1);
+  }
+  if (media.some((x) => x.kind !== "photo")) {
+    if (!$(".seek", el)) el.insertAdjacentHTML("beforeend", '<div class="tlabel"></div><div class="seek" hidden><div class="track"><div class="buf"></div><div class="fill"></div></div><div class="tip"></div></div>');
+    initSeek(el);
+  }
+  const st = $(".stage", el); st.style.transition = "none";
+  el.idx = startPage;
+  if (media.length > 1) slide(el, 0); else { loadPagesNear(el); playActive(el); paintSeek(el); }
+  requestAnimationFrame(() => { st.style.transition = ""; });
+}
+
+// 图片自动翻页：超过 10 张（漫画/大图集）5 秒一张，10 张及以下 2 秒一张；
+// 下一张加载好才翻，到最后一张停；空格暂停/继续
+const flipEvery = (n) => n > 10 ? 5000 : 2000;
+setInterval(() => {
+  const el = active; if (!el || state.flipPaused || !el.data || el.data.media.length < 2) return;
+  const now = performance.now();
+  if (el.flipEl !== el.idx) { el.flipEl = el.idx; el.flipAt = now; return; }  // 每张从显示那一刻起计时
+  if (now - el.flipAt < flipEvery(el.querySelectorAll(".slide").length)) return;
+  const slides = el.querySelectorAll(".slide"); const cur = slides[el.idx];
+  if (!cur || cur.querySelector("video") || el.idx >= slides.length - 1) return;
+  const nxt = slides[el.idx + 1].querySelector("img");
+  if (nxt && !(nxt.complete && nxt.naturalWidth)) { if (!nxt.src && nxt.dataset.pg) nxt.src = nxt.dataset.pg; else nxt.loading = "eager"; return; }
+  slide(el, 1);
+}, 100);
+function setMuted(m, el) {
+  if (!m && el) send(el.dataset.key, "unmute");
+  state.muted = m;
+  for (const v of document.querySelectorAll("video")) v.muted = m;
+  for (const b of document.querySelectorAll(".snd")) b.firstChild.textContent = m ? "🔇" : "🔊";
+}
+
+function playActive(el) {
+  el.querySelectorAll("video").forEach((v, i) => {
+    if (i === el.idx && el === active) { v.muted = state.muted; v.play().catch(() => {}); } else v.pause();
+  });
+}
+function next(el) { const n = el.nextElementSibling; if (n) n.scrollIntoView({ behavior:"smooth" }); }
+
+// 进度条：拖动或点击跳转；长视频第一次打开从中间开始
+const LONG_VIDEO = 180, START_AT = 0.5;
+const fmt = (s) => { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = String(s % 60).padStart(2, "0");
+  return h ? h + ":" + String(m).padStart(2, "0") + ":" + x : m + ":" + x; };
+function curVideo(el) { return el.querySelectorAll(".slide")[el.idx || 0]?.querySelector("video") || null; }
+function vidDur(el, v) { if (v && isFinite(v.duration) && v.duration > 0) return v.duration; return el.data?.media[el.idx || 0]?.duration || 0; }
+function paintSeek(el, ratio) {
+  const bar = $(".seek", el); if (!bar) return;
+  const v = curVideo(el), lab = $(".tlabel", el);
+  bar.hidden = !v; if (!v) { lab.textContent = ""; return; }
+  const d = vidDur(el, v); if (!d) return;
+  const t = ratio == null ? v.currentTime : ratio * d;
+  $(".fill", bar).style.width = Math.min(100, t / d * 100) + "%";
+  let b = 0; for (let i = 0; i < v.buffered.length; i++) if (v.buffered.start(i) <= v.currentTime + 1) b = Math.max(b, v.buffered.end(i));
+  $(".buf", bar).style.width = Math.min(100, b / d * 100) + "%";
+  lab.textContent = fmt(t) + " / " + fmt(d);
+}
+function seekTo(el, t) {
+  const v = curVideo(el); if (!v) return; const d = vidDur(el, v); if (!d) return;
+  t = Math.max(0, Math.min(d - 0.5, t));
+  v.currentTime = t; v.lastT = t; paintSeek(el);
+}
+function initSeek(el) {
+  const bar = $(".seek", el), tip = $(".tip", bar);
+  const ratioAt = (e) => { const r = bar.getBoundingClientRect(); return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)); };
+  bar.onpointermove = (e) => { const v = curVideo(el), q = ratioAt(e); tip.style.left = q * 100 + "%"; tip.textContent = fmt(q * vidDur(el, v));
+    if (bar.classList.contains("drag")) paintSeek(el, q); };
+  bar.onpointerdown = (e) => { e.stopPropagation(); bar.setPointerCapture(e.pointerId); bar.classList.add("drag"); paintSeek(el, ratioAt(e)); };
+  bar.onpointerup = (e) => { if (!bar.classList.contains("drag")) return; bar.classList.remove("drag");
+    const v = curVideo(el); seekTo(el, ratioAt(e) * vidDur(el, v)); send(el.dataset.key, "open"); };
+  bar.ondblclick = (e) => e.stopPropagation();
+  el.querySelectorAll("video").forEach((v) => {
+    v.addEventListener("timeupdate", () => { if (curVideo(el) === v && !bar.classList.contains("drag")) paintSeek(el); });
+    v.addEventListener("progress", () => { if (curVideo(el) === v) paintSeek(el); });
+    v.addEventListener("loadedmetadata", () => {
+      if (v.lastT) v.currentTime = v.lastT;
+      else if (!v.started && v.duration >= LONG_VIDEO) v.currentTime = v.duration * START_AT;
+      v.started = true; if (curVideo(el) === v) paintSeek(el);
+    });
+    v.addEventListener("pause", () => { if (v.currentTime) v.lastT = v.currentTime; });
+  });
+  paintSeek(el);
+}
+
+// 往回翻到附近时恢复视频；已经刷过、离得很远（在上方）的视频释放掉，前方预载好的不动
+const near = new IntersectionObserver((entries) => {
+  for (const e of entries) for (const v of e.target.querySelectorAll("video[data-src]")) {
+    if (e.isIntersecting) { if (!v.src) { v.preload = "auto"; v.src = v.dataset.src; } }
+    else if (e.boundingClientRect.bottom < 0 && v.src) { v.pause(); if (v.currentTime) v.lastT = v.currentTime; v.removeAttribute("src"); v.load(); }
+  }
+}, { root:feedEl, rootMargin:"200% 0px" });
+
+// 停留时间就是偏好信号
+let active = null, since = 0;
+const seen = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    const el = e.target;
+    if (e.isIntersecting && e.intersectionRatio >= .6) {
+      if (active && active !== el) leave(active);
+      active = el; since = performance.now();
+      if (!el.impressed) {
+        el.impressed = true; viewed.add(el.dataset.key);
+        for (let i = raw.length - 1; i >= 0; i--) if (!mayShow(raw[i].key)) raw.splice(i, 1);
+        for (const mode of ["foryou", "new"]) stash[mode] = stash[mode].filter((c) => mayShow(c.dataset.key, mode));
+        send(el.dataset.key, "impression");
+      }
+      openComments(el);
+      playActive(el);
+      fill();
+    } else if (el === active && e.intersectionRatio < .6) { leave(el); active = null; }
+  }
+}, { root:feedEl, threshold:[0, .6] });
+function leave(el) {
+  stopHold();
+  const ms = performance.now() - since;
+  if (ms > 300 && el.data) send(el.dataset.key, "dwell", ms);
+  el.querySelectorAll("video").forEach((v) => v.pause());
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden && active) { leave(active); } else if (active) { since = performance.now(); playActive(active); } });
+
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT" || document.querySelector("dialog[open]")) return;
+  if (e.key === "/") { e.preventDefault(); $("#q").focus(); $("#q").select(); return; }
+  const el = active; if (!el) return;
+  const k = e.key;
+  const v = curVideo(el), multi = el.data?.media.length > 1;
+  if (v && (e.shiftKey || !multi) && (k === "ArrowRight" || k === "ArrowLeft")) { e.preventDefault(); seekTo(el, v.currentTime + (k === "ArrowRight" ? 1 : -1) * (e.shiftKey ? 60 : 10)); return; }
+  if (v && /^[0-9]$/.test(k)) { seekTo(el, vidDur(el, v) * Number(k) / 10); return; }
+  if (v && k === " ") { e.preventDefault(); v.paused ? v.play().catch(() => {}) : v.pause(); return; }
+  if (k === " ") { e.preventDefault(); state.flipPaused = !state.flipPaused; return; }
+  if (k === "ArrowDown" || k === "j") { e.preventDefault(); next(el); }
+  else if (k === "ArrowUp" || k === "k") { e.preventDefault(); el.previousElementSibling?.scrollIntoView({ behavior:"smooth" }); }
+  else if (k === "ArrowRight" && el.data?.media.length > 1) slide(el, 1);
+  else if (k === "ArrowLeft" && el.data?.media.length > 1) slide(el, -1);
+  else if (k === "l") toggleLike(el);
+  else if (k === "x") $(".hide", el)?.click();
+  else if (k === "m") setMuted(!state.muted, el);
+  else if (k === "Escape" && state.feature) goBack();
+});
+
+// 频道选择
+async function openChannels() {
+  if (!$("#chanDlg").open) $("#chanDlg").showModal(); $("#chanList").textContent = "读取中…";
+  const r = await fetch("/api/channels"); if (!r.ok) { $("#chanList").textContent = "读取失败"; return; }
+  const list = await r.json();
+  $("#chanList").innerHTML = list.map((c) => '<label data-name="' + esc(c.title.toLowerCase()) + '"><input type="checkbox" value="' + c.id + '"' + (c.selected ? " checked" : "") + '>' +
+    esc(c.title) + '<small>' + (c.kind === "group" ? "群组" : "频道") + (c.username ? " · @" + esc(c.username) : "") + '</small></label>').join("") || "账号里没有频道或群组。";
+}
+$("#chanBtn").onclick = openChannels;
+
+// 搜索：作为一种「只看」，结果仍按口味排序，Esc 或「返回」退出
+$("#q").addEventListener("keydown", (e) => {
+  if (e.key === "Escape") { e.target.blur(); return; }
+  if (e.key !== "Enter") return;
+  const v = e.target.value.trim(); e.target.blur();
+  if (!v) { if (state.feature?.startsWith("q:")) goBack(); return; }
+  if (state.feature?.startsWith("q:")) { const prev = state.stack.pop() || { feature:null }; state.feature = prev.feature; state.featureLabel = prev.featureLabel; }
+  drill("q:" + v, "搜索「" + v + "」");
+});
+
+// 添加频道：先看订阅数，再由你决定加入
+const fmtCount = (n) => n == null ? "人数未知" : n >= 10000 ? (n / 10000).toFixed(1) + " 万订阅" : n + " 订阅";
+$("#peekBtn").onclick = async () => {
+  const ref = $("#addRef").value.trim(); if (!ref) return;
+  const out = $("#peekOut"); out.textContent = "查询中…";
+  const refs = [...new Set(ref.match(/(?:https?:\/\/)?t\.me\/[^\s，,)）]+|@[A-Za-z0-9_]{4,}/g) || [ref])];
+  const r = await fetch("/api/peek?ref=" + encodeURIComponent(refs.join(" "))); const list = await r.json();
+  const big = list.filter((x) => !x.error && !x.joined && (x.count || 0) >= 30000);
+  out.innerHTML = (big.length ? '<div class="p"><b>' + big.length + ' 个频道 ≥3 万订阅</b><button id="joinBig" class="on">全部加入</button></div>' : "") +
+    list.map((x, i) => x.error
+    ? '<div class="p"><span class="err">' + esc(x.ref) + '：' + esc(x.error) + '</span></div>'
+    : '<div class="p">' + esc(x.title) + '<small>' + fmtCount(x.count) + (x.username ? " · @" + esc(x.username) : "") + '</small>' +
+      (x.joined ? '<small>已加入</small>' : '<button data-i="' + i + '">加入</button>') + '</div>').join("");
+  for (const b of out.querySelectorAll("button[data-i]")) b.onclick = async () => {
+    b.disabled = true; b.textContent = "加入中…";
+    const res = await post("/api/join", { ref: list[b.dataset.i].ref }); const j = await res.json();
+    b.textContent = res.ok ? "已加入，同步中" : "失败：" + (j.error || res.status);
+    if (res.ok) openChannels();
+  };
+  if ($("#joinBig")) $("#joinBig").onclick = async (e) => {
+    const btn = e.target; btn.disabled = true;
+    for (const [n, x] of big.entries()) {
+      btn.textContent = "加入中 " + (n + 1) + " / " + big.length;
+      const res = await post("/api/join", { ref: x.ref }); const j = await res.json().catch(() => ({}));
+      if (!res.ok) { btn.textContent = "停在第 " + (n + 1) + " 个：" + (j.error || res.status); openChannels(); return; }
+      await new Promise((ok) => setTimeout(ok, 4000));  // 慢一点，避免 Telegram 限流
+    }
+    btn.textContent = "已全部加入，同步中"; openChannels();
+  };
+};
+$("#chanCancel").onclick = () => $("#chanDlg").close();
+$("#chanFilter").oninput = (e) => { const q = e.target.value.toLowerCase(); for (const l of document.querySelectorAll("#chanList label")) l.style.display = l.dataset.name.includes(q) ? "" : "none"; };
+$("#chanSave").onclick = async () => {
+  const ids = [...document.querySelectorAll("#chanList input:checked")].map((i) => i.value);
+  await post("/api/channels", { ids }); $("#chanDlg").close();
+  feedEl.innerHTML = '<div class="msg">正在同步所选频道，第一批出来后会自动显示…</div>';
+  const wait = setInterval(async () => { const s = await status(); if (s.cards) { clearInterval(wait); reset(); } }, 3000);
+};
+
+// 口味
+$("#tasteBtn").onclick = async () => {
+  $("#tasteBody").innerHTML = '<div style="margin-top:10px;color:var(--dim)">读取中…</div>';
+  if (!$("#tasteDlg").open) $("#tasteDlg").showModal();
+  const t = await fetch("/api/taste").then((r) => r.json()).catch(() => null);
+  if (!t) { $("#tasteBody").textContent = "读取失败，稍后再点一次。"; return; }
+  const chip = (x) => '<button data-f="' + esc(x.feature) + '" data-l="' + esc(x.label) + '">' + esc(x.label) + ' <small>' + x.w + '</small></button>';
+  $("#tasteBody").innerHTML = '<div style="margin-top:10px">更喜欢</div><div class="tw">' + (t.top.map(chip).join("") || "还没学到，多刷一会儿。") + '</div>' +
+    (t.combos?.length ? '<div>喜欢的组合</div><div class="tw">' + t.combos.map(chip).join("") + '</div>' : "") +
+    (t.bottom.length ? '<div>不太喜欢</div><div class="tw">' + t.bottom.map(chip).join("") + '</div>' : "");
+  for (const b of document.querySelectorAll("#tasteBody [data-f]")) b.onclick = () => { $("#tasteDlg").close(); drill(b.dataset.f, b.dataset.l); };
+};
+$("#tasteClose").onclick = () => $("#tasteDlg").close();
+$("#lanClose").onclick = () => $("#lanDlg").close();
+$("#lanBtn").onclick = async () => {
+  $("#lanBody").textContent = "读取中…"; $("#lanDlg").showModal();
+  const j = await fetch("/api/lan").then((r) => r.json()).catch(() => ({ error:"读取失败" }));
+  $("#lanBody").innerHTML = j.error ? esc(j.error) :
+    '手机和这台电脑连同一个 Wi-Fi，用相机扫码打开；之后在手机浏览器里「添加到主屏幕」就像 app 一样。' + j.svg +
+    '<div>或者打开完整链接：<code>' + esc(j.url) + '</code></div><div style="margin-top:8px">访问口令：<code>' + esc(new URL(j.url).searchParams.get("k")) + '</code></div><div style="margin-top:6px">这个链接带访问口令，别发给别人。</div>';
+};
+
+// 触屏双击喜欢；只接受同一卡片上短促、没有移动的两次点击。
+let touch = null, lastTap = null, lastTouchEnd = -Infinity;
+function likeAt(el, x, y) {
+  if (!state.liked.has(el.dataset.key)) toggleLike(el);
+  const r = el.getBoundingClientRect(), h = document.createElement("div");
+  h.className = "heart"; h.textContent = "♥";
+  h.style.left = x - r.left - 48 + "px"; h.style.top = y - r.top - 60 + "px";
+  h.style.zIndex = 6; el.append(h); setTimeout(() => h.remove(), 700);
+}
+// 鼠标/触屏按住视频 400ms 临时二倍速，松开、滑动或切后台恢复。
+let hold = null;
+function stopHold() {
+  if (!hold) return;
+  clearTimeout(hold.timer);
+  if (hold.started) hold.video.playbackRate = hold.rate;
+  hold.hint?.remove(); hold = null;
+}
+feedEl.addEventListener("pointerdown", (e) => {
+  stopHold();
+  if (e.button !== 0 || !e.isPrimary) return;
+  const video = e.target.closest("video"), el = video?.closest(".card[data-key]");
+  if (!video || el !== active) return;
+  hold = { video, rate:video.playbackRate, x:e.clientX, y:e.clientY, started:false };
+  hold.timer = setTimeout(() => {
+    if (!hold) return;
+    hold.started = true; video.playbackRate = 2; lastTap = null;
+    if (touch) touch.moved = true;
+    const hint = document.createElement("div"); hint.className = "speedHint"; hint.textContent = "▶▶ 2 倍速";
+    el.append(hint); hold.hint = hint;
+  }, 400);
+});
+feedEl.addEventListener("pointermove", (e) => {
+  if (hold && Math.hypot(e.clientX - hold.x, e.clientY - hold.y) > 12) stopHold();
+}, { passive:true });
+window.addEventListener("pointerup", stopHold);
+window.addEventListener("pointercancel", stopHold);
+window.addEventListener("blur", stopHold);
+document.addEventListener("visibilitychange", () => { if (document.hidden) stopHold(); });
+feedEl.addEventListener("contextmenu", (e) => { if (e.target.closest("video")) e.preventDefault(); });
+feedEl.addEventListener("touchstart", (e) => {
+  const stage = e.target.closest(".stage"), el = stage?.closest(".card[data-key]");
+  if (e.touches.length !== 1 || !el) { touch = null; lastTap = null; return; }
+  const t = e.touches[0];
+  touch = { el, x:t.clientX, y:t.clientY, at:performance.now(), moved:false };
+}, { passive:true });
+feedEl.addEventListener("touchmove", (e) => {
+  if (!touch) return;
+  const t = e.touches[0];
+  if (e.touches.length !== 1 || Math.hypot(t.clientX - touch.x, t.clientY - touch.y) > 12) touch.moved = true;
+}, { passive:true });
+feedEl.addEventListener("touchcancel", () => { touch = null; lastTap = null; }, { passive:true });
+feedEl.addEventListener("touchend", (e) => {
+  lastTouchEnd = performance.now();
+  if (!touch) return;
+  const t = e.changedTouches[0], start = touch; touch = null;
+  const dx = t.clientX - start.x, dy = t.clientY - start.y;
+  if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(dy)) {
+    lastTap = null;
+    if (start.el === active && start.el.data?.media.length > 1) slide(start.el, dx < 0 ? 1 : -1);
+    return;
+  }
+  if (start.moved || Math.hypot(dx,dy) > 12 || lastTouchEnd - start.at > 350) { lastTap = null; return; }
+  if (lastTap && lastTap.el === start.el && lastTouchEnd - lastTap.at < 330 && Math.hypot(t.clientX - lastTap.x,t.clientY - lastTap.y) < 32) {
+    likeAt(start.el,t.clientX,t.clientY); lastTap = null;
+  } else lastTap = { el:start.el, x:t.clientX,y:t.clientY,at:lastTouchEnd };
+}, { passive:true });
+$("#logo").onclick = () => { state.mode = "foryou"; state.feature = null; state.stack = []; syncModeButtons(); reset(); };
+
+boot();
+</script>
+</body>
+</html>

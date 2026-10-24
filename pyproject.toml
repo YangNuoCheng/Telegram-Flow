@@ -1,0 +1,11 @@
+[project]
+name = "telegram-flow"
+version = "0.1.0"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "telethon>=1.40",
+    "aiohttp>=3.9",
+    "cryptg>=0.6.0",
+    "segno>=1.6.6",
+]

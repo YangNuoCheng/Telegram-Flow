@@ -1,0 +1,17 @@
+services:
+  tg-feed:
+    image: local/tg-feed:0.1.0
+    build: .
+    init: true
+    restart: "no"
+    ports:
+      - "8978:8978"
+    environment:
+      TG_FEED_LAN_IP: ${TG_FEED_LAN_IP:-}
+    volumes:
+      - ./data:/app/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "2m"
+        max-file: "2"

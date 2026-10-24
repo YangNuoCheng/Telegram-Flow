@@ -1,0 +1,18 @@
+# Telegram-Flow
+
+> Self-hosted Telegram content aggregation, on-demand media relay, and local preference learning.
+
+- [Quick start (macOS, Linux, Windows) and usage](README.md)
+- [Step-by-step agent deployment and Telegram connection](AGENTREADME.md)
+- [Agent instructions for code changes](AGENTS.md)
+- [Architecture, module map and API reference](docs/ARCHITECTURE.md)
+- [Backend package](telegram_flow/)
+- [Service entry point](app.py)
+- [Browser reader](web/index.html)
+- [Introduction page](web/about.html)
+- [Architecture diagram](web/architecture.svg)
+- [Mocked request checks](tests/test_requests.py)
+- [Queue recovery and ordering checks](tests/test_queue.cjs)
+- [Hold-to-speed checks](tests/test_hold.cjs)
+
+Data under data/ is private and excluded from source control. Read source and mocks instead of personal account state. See AGENTS.md before running commands.
