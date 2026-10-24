@@ -1,0 +1,19 @@
+README.md
+  s_a9f81e88c2b483::t_c4509ac5a55160 80-81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "dec86b944467497e07051e970c255e228432aed9",
+  "prompts": {},
+  "sessions": {
+    "s_a9f81e88c2b483": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16970-4d19-7132-8b2b-af468e126a02",
+        "model": "anthropic/claude-opus-5-5"
+      },
+      "human_author": "dayyang <18801328722@163.com>"
+    }
+  }
+}
