@@ -1,0 +1,24 @@
+web/architecture.svg
+  s_a9f81e88c2b483::t_b10cdb8e9eda9f 1-89
+docs/ARCHITECTURE.md
+  s_a9f81e88c2b483::t_a9940d677196e0 14,24-27,31,63-85,88-92
+  s_a9f81e88c2b483::t_9533c2a972d760 10-13,15-23,30,60
+web/about.html
+  s_a9f81e88c2b483::t_f3c333afd76099 29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8a152c324c61b79f9254be93b699eefb8166aa27",
+  "prompts": {},
+  "sessions": {
+    "s_a9f81e88c2b483": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16970-4d19-7132-8b2b-af468e126a02",
+        "model": "anthropic/claude-opus-5-5"
+      },
+      "human_author": "dayyang <18801328722@163.com>"
+    }
+  }
+}
