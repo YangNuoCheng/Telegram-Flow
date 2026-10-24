@@ -1,0 +1,81 @@
+.dockerignore
+  s_a9f81e88c2b483::t_edc3d7e8e5f6d7 1-9
+.gitattributes
+  s_a9f81e88c2b483::t_91e91c1d2b17ed 1-2
+.gitignore
+  s_a9f81e88c2b483::t_a20f07161503bb 1-15
+AGENTREADME.md
+  s_a9f81e88c2b483::t_f1d1c923abd873 1-232
+Dockerfile
+  s_a9f81e88c2b483::t_7c02100752e193 1-16
+LICENSE
+  s_a9f81e88c2b483::t_e8fa05d4c5c168 1-21
+README.md
+  s_a9f81e88c2b483::t_fa0774ac9a37a7 1-152
+app.py
+  s_a9f81e88c2b483::t_d7ca5d5aaf1d31 1-5
+compose.yaml
+  s_a9f81e88c2b483::t_b28aa0588dd943 1-17
+docs/ARCHITECTURE.md
+  s_a9f81e88c2b483::t_d6e3d2347d484d 1-137
+docs/SIMILAR_PRODUCTS.md
+  s_a9f81e88c2b483::t_c51a65bf8234c2 1-46
+llms.txt
+  s_a9f81e88c2b483::t_e4f72157f65165 1-18
+pyproject.toml
+  s_a9f81e88c2b483::t_18a2fe9ae64af1 1-11
+start.ps1
+  s_a9f81e88c2b483::t_cf6d7fe135c4ca 1-25
+start.sh
+  s_a9f81e88c2b483::t_2f23670176ab97 1-24
+stop.ps1
+  s_a9f81e88c2b483::t_d4f822aa81d56f 1-5
+stop.sh
+  s_a9f81e88c2b483::t_87e1e4b07ca13a 1-4
+telegram_flow/__init__.py
+  s_a9f81e88c2b483::t_accd98da6e0164 1
+telegram_flow/admin.py
+  s_a9f81e88c2b483::t_c362f673591475 1-69
+telegram_flow/config.py
+  s_a9f81e88c2b483::t_460ab709ad2a06 1-18
+telegram_flow/features.py
+  s_a9f81e88c2b483::t_cb39f33e541322 1-99
+telegram_flow/filters.py
+  s_a9f81e88c2b483::t_3cfb30ba85ccf9 1-71
+telegram_flow/learning.py
+  s_a9f81e88c2b483::t_73ebd328c9c078 1-97
+telegram_flow/storage.py
+  s_a9f81e88c2b483::t_f178902462bf69 1-50
+telegram_flow/telegram.py
+  s_a9f81e88c2b483::t_1bd00580a5768f 1-202
+tests/test_hold.cjs
+  s_a9f81e88c2b483::t_ec0b64c6dad450 1-28
+tests/test_queue.cjs
+  s_a9f81e88c2b483::t_691d2237e968ab 1-45
+tests/test_requests.py
+  s_a9f81e88c2b483::t_7f7d6b4098d127 1-80
+uv.lock
+  s_a9f81e88c2b483::t_a44b94c4511933 1-846
+web/about.html
+  s_a9f81e88c2b483::t_ee0940063b4101 1-49
+web/index.html
+  s_a9f81e88c2b483::t_509a0f4254e37c 1-785
+web/logo.svg
+  s_a9f81e88c2b483::t_5a4848181c7e9c 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "053c7811ca2548dfd135fe7f16123ebb421c29e3",
+  "prompts": {},
+  "sessions": {
+    "s_a9f81e88c2b483": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16970-4d19-7132-8b2b-af468e126a02",
+        "model": "anthropic/claude-opus-5-5"
+      },
+      "human_author": "YangNuoCheng <42427439+YangNuoCheng@users.noreply.github.com>"
+    }
+  }
+}
