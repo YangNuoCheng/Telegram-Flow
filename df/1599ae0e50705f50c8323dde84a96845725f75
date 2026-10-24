@@ -1,0 +1,30 @@
+README.md
+  s_a9f81e88c2b483::t_0319b820366a89 21-35,110,122-123
+  s_a9f81e88c2b483::t_5311716486c04c 13,124
+AGENTREADME.md
+  s_a9f81e88c2b483::t_3540f5a0fe8417 1-232
+AGENTS.md
+  s_a9f81e88c2b483::t_3ee78c0be095d5 5
+docs/ARCHITECTURE.md
+  s_a9f81e88c2b483::t_8fbd032ae34958 106
+llms.txt
+  s_a9f81e88c2b483::t_1505d6969794f1 6-7
+telegram_flow/admin.py
+  s_a9f81e88c2b483::t_d82c420853ac3b 1-69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "df1599ae0e50705f50c8323dde84a96845725f75",
+  "prompts": {},
+  "sessions": {
+    "s_a9f81e88c2b483": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16970-4d19-7132-8b2b-af468e126a02",
+        "model": "anthropic/claude-opus-5-5"
+      },
+      "human_author": "dayyang <18801328722@163.com>"
+    }
+  }
+}
