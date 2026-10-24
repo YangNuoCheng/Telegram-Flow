@@ -90,6 +90,8 @@ class Telegram:
         return await asyncio.shield(self.message_tasks[key])
 
     async def dialogs(self) -> list[dict]:
+        """刷新账号已加入的频道和群组。首次导入之后新出现的频道自动勾选；群组、取消过勾选的来源，
+        以及标题命中过滤词表（含默认的未成年、偷拍等词）的频道都不自动勾选。"""
         out = []
         async for d in self.client.iter_dialogs():
             if not (d.is_channel or d.is_group):
@@ -98,11 +100,32 @@ class Telegram:
             out.append({"id": utils.get_peer_id(ent), "title": d.name or "", "username": getattr(ent, "username", None),
                         "kind": "channel" if d.is_channel and not d.is_group else "group"})
         with db() as c:
+            known = {r[0] for r in c.execute("SELECT id FROM channel")}
+            blocked = blocklist()
             for d in out:
-                c.execute("INSERT INTO channel(id,title,username,kind) VALUES(?,?,?,?) ON CONFLICT(id) DO UPDATE SET "
+                title = d["title"].casefold()
+                auto = int(bool(known) and d["id"] not in known and d["kind"] == "channel"
+                           and not any(w in title for w in blocked))
+                c.execute("INSERT INTO channel(id,title,username,kind,selected) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET "
                           "title=excluded.title, username=excluded.username, kind=excluded.kind",
-                          (d["id"], d["title"], d["username"], d["kind"]))
+                          (d["id"], d["title"], d["username"], d["kind"], auto))
+                d["new"] = bool(auto)
         return out
+
+    async def refresh_dialogs(self) -> None:
+        """后台检查新加入的频道；有新频道就立即同步。失败只记录，不影响常规同步。"""
+        if not self.ready or self.retry_after():
+            return
+        try:
+            new = [d for d in await self.dialogs() if d["new"]]
+        except errors.FloodWaitError as e:
+            self.limited(e.seconds)
+            return
+        except Exception as exc:
+            print(f"刷新频道列表失败: {exc}")
+            return
+        if new:
+            print("自动加入内容流: " + "、".join(d["title"] for d in new))
 
     async def sync_channel(self, ch: sqlite3.Row, older: bool = False) -> int:
         block = blocklist()
@@ -169,6 +192,7 @@ class Telegram:
 
     async def loop(self) -> None:
         while True:
+            await self.refresh_dialogs()
             await self.sync_all()
             await asyncio.sleep(SYNC_EVERY)
 

@@ -49,7 +49,8 @@ async def status(_req):
 
 
 async def channels(_req):
-    await TG.dialogs()
+    if any(d["new"] for d in await TG.dialogs()):
+        asyncio.create_task(TG.sync_all())
     with db() as c:
         rows = [dict(r) for r in c.execute("SELECT id,title,username,kind,selected,synced_at FROM channel ORDER BY selected DESC, title")]
     return web.json_response(rows)
