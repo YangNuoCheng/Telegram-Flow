@@ -1,0 +1,21 @@
+AGENTREADME.md
+  s_a9f81e88c2b483::t_f7e9c9224fe78a 75
+web/about.html
+  s_a9f81e88c2b483::t_c979b717eb8d91 30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3bf474108c9d1c258bdd35aa96ff94694ae8e9f3",
+  "prompts": {},
+  "sessions": {
+    "s_a9f81e88c2b483": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16970-4d19-7132-8b2b-af468e126a02",
+        "model": "anthropic/claude-opus-5-5"
+      },
+      "human_author": "dayyang <18801328722@163.com>"
+    }
+  }
+}
