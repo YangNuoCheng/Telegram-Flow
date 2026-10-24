@@ -1,0 +1,31 @@
+telegram_flow/ranking.py
+  s_a9f81e88c2b483::t_350f1eb70c645b 133,135-136
+AGENTS.md
+  s_a9f81e88c2b483::t_350f1eb70c645b 16
+telegram_flow/media.py
+  s_a9f81e88c2b483::t_350f1eb70c645b 12,59-70,73
+LICENSE
+  s_a9f81e88c2b483::t_ad8c304c2cb51e 1-21
+README.md
+  s_a9f81e88c2b483::t_59c61d41f3489f 12,111,146-149
+pyproject.toml
+  s_a9f81e88c2b483::t_18f75a53256936 4
+web/index.html
+  s_a9f81e88c2b483::t_85c5625b3a7ab9 207-208
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6d3fd72f77dcb71f94994ae3f167e311c2e9f320",
+  "prompts": {},
+  "sessions": {
+    "s_a9f81e88c2b483": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16970-4d19-7132-8b2b-af468e126a02",
+        "model": "anthropic/claude-opus-5-5"
+      },
+      "human_author": "dayyang <18801328722@163.com>"
+    }
+  }
+}
