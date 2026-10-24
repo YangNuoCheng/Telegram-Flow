@@ -1,0 +1,29 @@
+README.md
+  s_a9f81e88c2b483::t_1b78639bcb6133 1,9-12
+app.py
+  s_a9f81e88c2b483::t_0d655b0920a815 1,1225,1227,1261
+docs/SIMILAR_PRODUCTS.md
+  s_a9f81e88c2b483::t_54fd554a357fc0 1-46
+index.html
+  s_a9f81e88c2b483::t_ab5940ae0fe070 6,132
+pyproject.toml
+  s_a9f81e88c2b483::t_28c849763c81a4 2
+uv.lock
+  s_a9f81e88c2b483::t_6258ea70cd044d 688
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a8527b5f1d19ecea76c9f74ae77da0128a8ecc27",
+  "prompts": {},
+  "sessions": {
+    "s_a9f81e88c2b483": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16970-4d19-7132-8b2b-af468e126a02",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "dayyang <18801328722@163.com>"
+    }
+  }
+}
