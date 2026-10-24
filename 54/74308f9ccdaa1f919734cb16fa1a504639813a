@@ -1,0 +1,26 @@
+telegram_flow/telegram.py
+  s_a9f81e88c2b483::t_27e8d3d2214765 103,109,111-112,115-129,195
+  s_a9f81e88c2b483::t_81ee5f9441a095 93-94,104,106-108
+telegram_flow/server.py
+  s_a9f81e88c2b483::t_27e8d3d2214765 52-53
+tests/test_new_channels.py
+  s_a9f81e88c2b483::t_81ee5f9441a095 1-64
+README.md
+  s_a9f81e88c2b483::t_fda898ef236171 36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5474308f9ccdaa1f919734cb16fa1a504639813a",
+  "prompts": {},
+  "sessions": {
+    "s_a9f81e88c2b483": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16970-4d19-7132-8b2b-af468e126a02",
+        "model": "anthropic/claude-opus-5-5"
+      },
+      "human_author": "YangNuoCheng <42427439+YangNuoCheng@users.noreply.github.com>"
+    }
+  }
+}
